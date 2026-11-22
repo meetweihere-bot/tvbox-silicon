@@ -106,7 +106,7 @@ public struct VideoCredit: Hashable, Sendable, Codable {
             }
         }
         var rest = field[...]
-        while let match = rest.firstMatch(of: /\[a=cr:(\{.*?\})\/\](.*?)\[\/a\]/) {
+        while let match = rest.firstMatch(of: /\[a=cr:(\{.*?\})\//](.*?)\[\/a\]/) {
             plain(rest[..<match.range.lowerBound])
             let fields = (try? JSONDecoder().decode([String: JSONValue].self, from: Data(match.1.utf8))) ?? [:]
             let name = String(match.2).isEmpty ? fields["name"]?.string ?? "" : String(match.2)
@@ -469,7 +469,7 @@ public struct CatalogClient: Sendable {
     /// A search (`query`) or one page of a category, narrowed by the category's filter `choices` (key to value).
     public func list(category: String?, query: String, page: Int, filters choices: [String: String] = [:]) async throws -> CatalogPage {
         var params = ["pg": String(page)]
-        if !query.isEmpty { params["wd"] = query; params["quick"] = "false" }
+        if !query.isEmpty { params["wd"] = TitleMatch.searchQuery(query); params["quick"] = "false" }
         else {
             params["ac"] = "detail"; params["t"] = category
             params.merge(Self.filterParameters(choices, siteType: site.type)) { _, new in new }
@@ -609,7 +609,7 @@ public struct CatalogClient: Sendable {
     /// stops, even when the answer is empty. `parse:` runs the named parser: type 0 sniffs
     /// `parser + page`, type 1 asks that JSON service, type 2 and 3 fail, and type 4 races
     /// every type 0 and type 1 parser. A flag list on a parser limits that type to the
-    /// parsers that contain the episode flag; if none contain it, that type uses them all.
+    /// parsers that contain the episode flag; if none contain that type, that type uses them all.
     /// Any other page runs the HTML and JSON fast path first, then sniffs the page.
     /// The 15 second clock belongs to the sniffer, not to this function.
     ///
@@ -676,7 +676,7 @@ public struct CatalogClient: Sendable {
             if let id = Self.bilibiliProxyID(address), let bilibili = CloudSources.site(where: \.isBilibili) {
                 let channel = try await CatalogClient(site: bilibili, origin: CloudSources.address, http: http)
                     .playback(Episode(id: id, name: choice.name, address: id, flag: plan.group))
-                return Channel(name: choice.name, group: plan.group, url: channel.url, headers: channel.headers, subtitles: channel.subtitles, skips: plan.skips)
+                return Channel(name: choice.name, group: plan.group, url: channel.url, headers: channel.headers, subtitles: channel.subtitles, skips: channel.skips)
             }
             throw TVError.unsupported(L10n.text("This source needs a playback proxy that is not supported yet."))
         }
