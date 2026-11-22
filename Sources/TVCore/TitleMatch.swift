@@ -11,6 +11,14 @@ public enum TitleMatch {
         return String(value.lowercased().filter { $0.isLetter || $0.isNumber })
     }
 
+    /// The keyword a source is asked with: half-width and simplified, but with the viewer's spaces and
+    /// punctuation left in place (#1495, #1364). Sources that index simplified titles then answer a
+    /// keyword typed in traditional Chinese; titles still go through `normalize` on the way back.
+    public static func searchQuery(_ text: String) -> String {
+        var value = text.applyingTransform(.fullwidthToHalfwidth, reverse: false) ?? text
+        return value.applyingTransform(StringTransform("Hant-Hans"), reverse: false) ?? value
+    }
+
     /// A season at the end of what was typed ("第二季", "s2", "season 2") doesn't have to be in the title.
     private static let season = try! NSRegularExpression(pattern: "(第[一二三四五六七八九十百零0-9]+[季部期]|s[0-9]+|season[0-9]+)$")
 

@@ -13,6 +13,15 @@ import Testing
     #expect(TitleMatch.matches(title: "机动搜查队", keyword: "機動搜查隊"))
 }
 
+@Test func searchQueryFoldsWidthAndChineseWithoutDroppingTheViewerSpaces() {
+    #expect(TitleMatch.searchQuery("機動搜查隊") == "机动搜查队")
+    #expect(TitleMatch.searchQuery("慶餘年 第二季") == "庆余年 第二季")
+    #expect(TitleMatch.searchQuery("ＡＢＣ　剧") == "ABC 剧")
+    #expect(TitleMatch.searchQuery("Mission: Impossible") == "Mission: Impossible")
+    #expect(TitleMatch.searchQuery("庆余年") == "庆余年")
+    #expect(TitleMatch.searchQuery(TitleMatch.searchQuery("機動搜查隊")) == "机动搜查队")
+}
+
 @Test func aSeasonOnTheKeywordIsOptional() {
     #expect(TitleMatch.matches(title: "庆余年", keyword: "庆余年第二季"))
     #expect(TitleMatch.matches(title: "Severance", keyword: "Severance S2"))
@@ -41,7 +50,7 @@ import Testing
     #expect(TitleMatch.ordered(titles, keyword: "仁医", title: { $0 }) == ["仁医 第二季", "仁医", "别的剧", "无关"])
     // The search page shows the matching ones and keeps the rest behind a button (#770).
     let parts = TitleMatch.split(titles, keyword: "仁医", title: { $0 })
-    #expect(parts.matching == ["仁医 第二季", "仁医"] && parts.other == ["别的剧", "无关"])
+    #expect(parts.matching == ["仁医 第二季", "仁医"] && parts.other == ["无关"])
     // A search by an actor's name matches no title: nothing to lead with, so the page shows them all.
     #expect(TitleMatch.split(titles, keyword: "大泽隆夫", title: { $0 }).matching.isEmpty)
     #expect(TitleMatch.split(titles, keyword: " ", title: { $0 }).other.isEmpty)
